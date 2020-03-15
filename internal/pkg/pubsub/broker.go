@@ -10,7 +10,7 @@ type publishMessage struct {
 	Message string
 }
 
-// Broker model
+// Broker represents a broker
 type Broker struct {
 	active     bool
 	publish    chan publishMessage
@@ -35,8 +35,12 @@ func (b *Broker) Start() {
 	b.active = true
 	go func() {
 		for {
+			// Consume multiple channels and react.  The use of multiple channels removes
+			// several race conditions as each action will block
+			// TODO test what happens if a client disconnects in the middle of a message stream
 			select {
 			case event := <-b.publish:
+				// This will block on each client, and thus it is important to remove clients
 				for id, client := range b.clients {
 					log.Debug().Msgf("Publishing to: %s\n", id)
 
@@ -57,6 +61,7 @@ func (b *Broker) Start() {
 	}()
 }
 
+// RegisterClient in registry and make available
 func (b *Broker) RegisterClient(client Client) error {
 	if !(b.active) {
 		return errors.New("Broker Not Started")
@@ -67,6 +72,7 @@ func (b *Broker) RegisterClient(client Client) error {
 	return nil
 }
 
+// UnregisterClient removes client from client registry
 func (b *Broker) UnregisterClient(client Client) error {
 	if !(b.active) {
 		return errors.New("Broker Not Started")
@@ -77,6 +83,7 @@ func (b *Broker) UnregisterClient(client Client) error {
 	return nil
 }
 
+// PublishMessage to clients
 func (b *Broker) PublishMessage(m Message) error {
 	if !(b.active) {
 		return errors.New("Broker Not Started")

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 )
@@ -33,40 +34,53 @@ func TestPublish(t *testing.T) {
 	}
 }
 
-// func TestSingleSubscriber(t *testing.T) {
-// 	server := New()
+func TestSubscribe(t *testing.T) {
+	server := New()
 
-// 	var resp *http.Response
-// 	var err error
+	var resp *http.Response
+	var err error
 
-// 	go func() {
-// 		server.Start()
+	go func() {
+		server.Start()
+	}()
 
-// 		resp, err = http.Get("http://localhost:8080/subscribe")
-// 		if err != nil {
-// 			t.Error("err", err)
+	var wg sync.WaitGroup
+	wg.Add(1)
 
-// 		}
+	go func() {
+		defer wg.Done()
 
-// 		t.Log("resp", resp)
-// 	}()
+		resp, err = http.Get("http://localhost:8080/subscribe")
 
-// 	time.Sleep(1 * time.Second)
+		if err != nil {
+			t.Error("err", err)
+			t.FailNow()
+		}
 
-// 	// Make Publish Request
-// 	values := map[string]string{"message": "test"}
+		defer resp.Body.Close()
 
-// 	jsonValue, _ := json.Marshal(values)
+		if resp.StatusCode != 200 {
+			t.Error("Expected 200 response, got", resp.StatusCode)
+			t.FailNow()
+		}
+	}()
 
-// 	resp, err = http.Post("http://localhost:8080/publish", "application/json", bytes.NewBuffer(jsonValue))
+	time.Sleep(500 * time.Millisecond)
 
-// 	t.Error("Expected 200 response, got", resp.StatusCode)
+	// Make Publish Request
+	values := map[string]string{"message": "test"}
 
-// 	if err != nil {
-// 		t.Error("Expected response, got", err)
-// 	}
+	jsonValue, _ := json.Marshal(values)
 
-// 	if resp.StatusCode != 200 {
-// 		t.Error("Expected 200 response, got", resp.StatusCode)
-// 	}
-// }
+	resp, err = http.Post("http://localhost:8080/publish", "application/json", bytes.NewBuffer(jsonValue))
+
+	if err != nil {
+		t.Error("Expected response, got", err)
+	}
+
+	if resp.StatusCode != 200 {
+		t.Error("Expected 200 response, got", resp.StatusCode)
+	}
+
+	wg.Wait()
+}

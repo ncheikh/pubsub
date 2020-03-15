@@ -5,7 +5,8 @@ import (
 	"github.com/ncheikh/pubsub/internal/pkg/pubsub"
 )
 
-type PubSubBroker interface {
+// pubSubBroker that allows for subscriptions and publishing
+type pubSubBroker interface {
 	Start()
 	RegisterClient(pubsub.Client) error
 	UnregisterClient(pubsub.Client) error
@@ -13,11 +14,13 @@ type PubSubBroker interface {
 	PublishMessage(pubsub.Message) error
 }
 
+// Server object
 type Server struct {
 	router *gin.Engine
-	broker PubSubBroker
+	broker pubSubBroker
 }
 
+// New creates a new server instance
 func New() *Server {
 	// Create Gin Instance
 	r := gin.New()
@@ -32,6 +35,7 @@ func New() *Server {
 	}
 }
 
+// Start the server listening
 func (s *Server) Start() {
 	// Bind Handlers
 	s.bind()
@@ -43,6 +47,7 @@ func (s *Server) Start() {
 	s.router.Run()
 }
 
+// bind handlers to endpoints
 func (s *Server) bind() {
 	s.router.POST("/publish", s.handlePublish)
 

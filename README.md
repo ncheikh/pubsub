@@ -4,7 +4,9 @@ HTTP Based PubSub System that uses HTTP SSE to publish messages to subscribers
 
 ## Running
 
-`make serve`
+`make run`
+
+`make serve` (Hot Reloading)
 
 ## Testing
 
