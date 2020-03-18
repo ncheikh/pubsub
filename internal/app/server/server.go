@@ -8,6 +8,7 @@ import (
 // pubSubBroker that allows for subscriptions and publishing
 type pubSubBroker interface {
 	Start()
+
 	RegisterClient(pubsub.Client) error
 	UnregisterClient(pubsub.Client) error
 
