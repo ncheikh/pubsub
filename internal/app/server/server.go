@@ -30,6 +30,7 @@ func New() *Server {
 	// Instantiate Broker
 	broker := pubsub.NewBroker()
 
+	// HTTP/2 would be even better as it would use multiplexing
 	return &Server{
 		router: r,
 		broker: broker,
